@@ -7,12 +7,17 @@ import org.apache.poi.ss.usermodel.Workbook;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 public class UseReflection {
 
-    public void getReflection() throws FileNotFoundException, IllegalAccessException, InstantiationException, InvocationTargetException {
+    //getting fill/sort classes into action by reflection
+    public void getReflection() throws  IllegalAccessException,
+            InstantiationException, InvocationTargetException, NoSuchMethodException, NoSuchFieldException {
         FillArray fillArray = new FillArray();
         SortArray sortArray = new SortArray();
 
@@ -22,40 +27,65 @@ public class UseReflection {
         Method[] fillMethod = fillClass.getDeclaredMethods();
         Method[] sortMethod = sortClass.getDeclaredMethods();
 
-            long startTime;
-            long sortTime;
+        //collection for holding sort results
+        SortResultCollectionHolder collection = new SortResultCollectionHolder();
+        collection.arrayList = new ArrayList();
 
-            Workbook sortBook = new HSSFWorkbook();
-
-            int size = 10;//array size
+        //loop for adding sort results to collection
+        for (int k = 10; k <100; k=k+10) { // 'k' is array size
             for (int i = 0; i < fillMethod.length; i++) {
-                int[] fillResult = new int[0];
-                    fillResult = ((int[]) fillMethod[i].invoke(fillClass.newInstance(), size));
-                    String sheetName = fillMethod[i].getName();
-                    Sheet sheet = sortBook.createSheet(sheetName);//creating xls sheet with fill method name
+                int[] fillResult = ((int[]) fillMethod[i].invoke(fillClass.newInstance(), k));
 
                 for (int j = 0; j < sortMethod.length; j++) {
-                    startTime = System.nanoTime();
+                    long startTime = System.nanoTime();
                     int[] sortResult = ((int[]) sortMethod[j].invoke(sortClass.newInstance(), fillResult));
+                    long sortTime = System.nanoTime() - startTime;//calculating sorting time
 
-                    String sortName = sortMethod[j].getName();
-
-                    Row row= sheet.createRow(j);
-                    Cell cellM = row.createCell(0);
-                    cellM.setCellValue(sortName);
-
-                    sortTime = System.nanoTime() - startTime;//calculating sorting time
-                    //Row rowTime = sheet.createRow(j);
-                    Cell cellT = row.createCell(1);
-                    cellT.setCellValue(sortTime);
+                    //creating object for each fill/sort result and adding it to collection
+                    SortResultObject sortResultObject = new SortResultObject(fillMethod[i].getName(), sortMethod[j].getName(), k, sortTime);
+                    collection.arrayList.add(sortResultObject);
                 }
             }
+        }
+        // creating excel sheet with sort results
+        Workbook wb = new HSSFWorkbook();
+        Sheet sheet = wb.createSheet();
+
+        int count=0;
+        Iterator iterator = collection.arrayList.iterator();
+        while (iterator.hasNext()){
+            Object ob = iterator.next();
+            Class obClass  =ob.getClass();
+            Field fillMethodName = obClass.getDeclaredField("fillMethodName");
+            Field sortMethodName = obClass.getDeclaredField("sortMethodName");
+            Field collectionSize = obClass.getDeclaredField("collectionSize");
+            Field sortTime = obClass.getDeclaredField("sortTime");
+
+            Object fillValue = fillMethodName.get(ob);
+            Object sortValue = sortMethodName.get(ob);
+            Object sizeValue = collectionSize.getInt(ob);
+            Object timeValue = sortTime.get(ob);
+
+            Row row = sheet.createRow(count);
+
+            Cell fillCell = row.createCell(0);
+            Cell sortCell = row.createCell(1);
+            Cell sizeCell = row.createCell(2);
+            Cell timeCell = row.createCell(3);
+
+            fillCell.setCellValue(String.valueOf(fillValue));
+            sortCell.setCellValue(String.valueOf(sortValue));
+            sizeCell.setCellValue((Integer) sizeValue);
+            timeCell.setCellValue((Long)timeValue);
+            count++;
+        }
         try(FileOutputStream fos = new FileOutputStream("SortTime.xls")) {
-            sortBook.write(fos);
+            wb.write(fos);
         }catch (IOException e){
             System.out.println(e);
         }
-        }
+    }
 }
+
 
 
