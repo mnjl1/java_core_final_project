@@ -1,3 +1,5 @@
+import java.util.Comparator;
+
 //object for sort result
 public class SortResultObject {
 

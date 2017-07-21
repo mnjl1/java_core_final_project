@@ -3,8 +3,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -49,35 +47,43 @@ public class UseReflection {
         }
         // creating excel sheet with sort results
         Workbook wb = new HSSFWorkbook();
-        Sheet sheet = wb.createSheet();
 
-        int count=0;
-        Iterator iterator = collection.arrayList.iterator();
-        while (iterator.hasNext()){
-            Object ob = iterator.next();
-            Class obClass  =ob.getClass();
-            Field fillMethodName = obClass.getDeclaredField("fillMethodName");
-            Field sortMethodName = obClass.getDeclaredField("sortMethodName");
-            Field collectionSize = obClass.getDeclaredField("collectionSize");
-            Field sortTime = obClass.getDeclaredField("sortTime");
+        for (int i = 0; i <fillMethod.length ; i++) {
+            Sheet sheet = wb.createSheet(fillMethod[i].getName().toString());
 
-            Object fillValue = fillMethodName.get(ob);
-            Object sortValue = sortMethodName.get(ob);
-            Object sizeValue = collectionSize.getInt(ob);
-            Object timeValue = sortTime.get(ob);
+            int count = 0;
+            Iterator iterator = collection.arrayList.iterator();
+            while (iterator.hasNext()) {
+                Object ob = iterator.next();
+                Class obClass = ob.getClass();
 
-            Row row = sheet.createRow(count);
+                Field fillMethodName = obClass.getDeclaredField("fillMethodName");
+                System.out.println(fillMethod[i].getName());
+                System.out.println(fillMethodName.get(ob));
+                if (fillMethodName.get(ob).equals(fillMethod[i].getName())) {
+                    Field sortMethodName = obClass.getDeclaredField("sortMethodName");
+                    Field collectionSize = obClass.getDeclaredField("collectionSize");
+                    Field sortTime = obClass.getDeclaredField("sortTime");
 
-            Cell fillCell = row.createCell(0);
-            Cell sortCell = row.createCell(1);
-            Cell sizeCell = row.createCell(2);
-            Cell timeCell = row.createCell(3);
+                    //Object fillValue = fillMethodName.get(ob);
+                    Object sortValue = sortMethodName.get(ob);
+                    Object sizeValue = collectionSize.getInt(ob);
+                    Object timeValue = sortTime.get(ob);
 
-            fillCell.setCellValue(String.valueOf(fillValue));
-            sortCell.setCellValue(String.valueOf(sortValue));
-            sizeCell.setCellValue((Integer) sizeValue);
-            timeCell.setCellValue((Long)timeValue);
-            count++;
+                    Row row = sheet.createRow(count);
+
+                    //Cell fillCell = row.createCell(0);
+                    Cell sortCell = row.createCell(1);
+                    Cell sizeCell = row.createCell(2);
+                    Cell timeCell = row.createCell(3);
+
+                    //fillCell.setCellValue(String.valueOf(fillValue));
+                    sortCell.setCellValue(String.valueOf(sortValue));
+                    sizeCell.setCellValue((Integer) sizeValue);
+                    timeCell.setCellValue((Long) timeValue);
+                    count++;
+                }
+            }
         }
         try(FileOutputStream fos = new FileOutputStream("SortTime.xls")) {
             wb.write(fos);
@@ -85,7 +91,9 @@ public class UseReflection {
             System.out.println(e);
         }
     }
+
 }
+
 
 
 

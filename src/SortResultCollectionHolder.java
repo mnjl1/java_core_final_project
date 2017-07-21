@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.List;
 
 //collection with sort results objects
 public class SortResultCollectionHolder {
@@ -7,7 +8,4 @@ public class SortResultCollectionHolder {
     SortResultCollectionHolder(){
         arrayList = new ArrayList();
     }
-
-
-
 }
