@@ -65,19 +65,16 @@ public class UseReflection {
                     Field collectionSize = obClass.getDeclaredField("collectionSize");
                     Field sortTime = obClass.getDeclaredField("sortTime");
 
-                    //Object fillValue = fillMethodName.get(ob);
                     Object sortValue = sortMethodName.get(ob);
                     Object sizeValue = collectionSize.getInt(ob);
                     Object timeValue = sortTime.get(ob);
 
                     Row row = sheet.createRow(count);
 
-                    //Cell fillCell = row.createCell(0);
                     Cell sortCell = row.createCell(1);
                     Cell sizeCell = row.createCell(2);
                     Cell timeCell = row.createCell(3);
 
-                    //fillCell.setCellValue(String.valueOf(fillValue));
                     sortCell.setCellValue(String.valueOf(sortValue));
                     sizeCell.setCellValue((Integer) sizeValue);
                     timeCell.setCellValue((Long) timeValue);
